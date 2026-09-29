@@ -1,0 +1,19 @@
+#block-search,
+#block-search * {
+  box-sizing: border-box;
+}
+
+#block-search {
+  background: #fff;
+  width: 100%;
+  border: 1px solid #ddd7cd;
+  border-radius: 18px;
+  /*max-width: 962px;*/
+  margin: 0 auto 28px;
+  box-shadow: 0 14px 40px rgba(36, 31, 25, .08);
+}
+
+.tl-container {
+  margin: 0 auto;
+  padding: 0 25px;
+}
