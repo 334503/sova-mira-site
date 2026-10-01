@@ -4,6 +4,31 @@
   const nav=document.querySelector('header nav');
   if(navBtn&&nav){navBtn.addEventListener('click',()=>nav.classList.toggle('open'));}
 
+  const searchForm=document.querySelector('#tl-search-form');
+  if(searchForm){
+    const preparedFrames=new WeakSet();
+    const prepareFrame=(frame)=>{
+      if(preparedFrames.has(frame))return;
+      preparedFrames.add(frame);
+      let attempts=0;
+      const timer=setInterval(()=>{
+        attempts+=1;
+        try{
+          const subtitle=frame.contentDocument?.querySelector('.sf-top-block-2');
+          if(subtitle){
+            subtitle.style.setProperty('display','none','important');
+            frame.contentWindow?.dispatchEvent(new Event('resize'));
+            clearInterval(timer);
+          }
+        }catch(_){}
+        if(attempts>=40)clearInterval(timer);
+      },250);
+    };
+    const scanFrames=()=>searchForm.querySelectorAll('iframe').forEach(prepareFrame);
+    new MutationObserver(scanFrames).observe(searchForm,{childList:true,subtree:true});
+    scanFrames();
+  }
+
   document.querySelectorAll('[data-contact-toggle]').forEach(btn=>{
     btn.addEventListener('click',()=>document.querySelector('.contact-pop')?.classList.toggle('open'));
   });
