@@ -1,0 +1,10 @@
+{
+  "openVpnExe": "C:\\Program Files\\OpenVPN\\bin\\openvpn.exe",
+  "profileSource": "C:\\Users\\Admin\\Downloads\\MMM_PRO_HHH.ovpn",
+  "encryptedProfile": "hotel-profile.ovpn.dpapi",
+  "profileSha256": "BC7742537189F4A32B4BE2D77CF453528D81BDAEF7CCAA89D66F5CD90572E430",
+  "hotelSubnet": "192.168.0.0",
+  "hotelMask": "255.255.255.0",
+  "healthHost": "192.168.0.1",
+  "healthPort": 80
+}

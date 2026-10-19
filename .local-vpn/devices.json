@@ -1,0 +1,42 @@
+[
+  {
+    "name": "router",
+    "aliases": ["router", "router-wan", "роутер"],
+    "label": "TP-Link — настройки WAN",
+    "url": "http://192.168.0.1/#wanSettings",
+    "host": "192.168.0.1",
+    "port": 80
+  },
+  {
+    "name": "camera1",
+    "aliases": ["camera1", "cam108", "108", "камера1", "камера-1"],
+    "label": "Камера 1 (.108)",
+    "url": "http://192.168.0.108/views/main.html",
+    "host": "192.168.0.108",
+    "port": 80
+  },
+  {
+    "name": "camera2",
+    "aliases": ["camera2", "cam135", "135", "камера2", "камера-2"],
+    "label": "Камера 2 (.135)",
+    "url": "http://192.168.0.135/views/main.html",
+    "host": "192.168.0.135",
+    "port": 80
+  },
+  {
+    "name": "camera3",
+    "aliases": ["camera3", "cam162", "162", "камера3", "камера-3"],
+    "label": "Камера 3 (.162)",
+    "url": "http://192.168.0.162/index.html",
+    "host": "192.168.0.162",
+    "port": 80
+  },
+  {
+    "name": "printer",
+    "aliases": ["printer", "xerox", "138", "принтер", "ксерокс"],
+    "label": "Принтер Xerox (.138)",
+    "url": "http://192.168.0.138/",
+    "host": "192.168.0.138",
+    "port": 80
+  }
+]
