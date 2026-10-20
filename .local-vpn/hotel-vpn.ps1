@@ -23,6 +23,10 @@ function Read-Json([string]$Path) {
 
 $config = Read-Json $configPath
 $devices = @(Read-Json $devicesPath)
+$guiExe = Join-Path (Split-Path -Parent $config.openVpnExe) 'openvpn-gui.exe'
+$guiConfigDir = Join-Path $env:USERPROFILE 'OpenVPN\config'
+$guiProfileName = 'hotel-split'
+$guiProfilePath = Join-Path $guiConfigDir "$guiProfileName.ovpn"
 
 function Restore-RuntimeProfile {
     $encryptedPath = Join-Path $moduleRoot $config.encryptedProfile
@@ -113,24 +117,26 @@ function Start-HotelVpn {
         return
     }
     if (-not (Test-Path -LiteralPath $config.openVpnExe)) { throw "OpenVPN не найден: $($config.openVpnExe)" }
+    if (-not (Test-Path -LiteralPath $guiExe)) { throw "OpenVPN GUI не найден: $guiExe" }
     if ($null -ne (Get-VpnProcess)) {
         throw 'OpenVPN уже запущен, но его маршрут не соответствует безопасному режиму. Сначала выполните stop.'
     }
 
     New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $guiConfigDir -Force | Out-Null
     Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
     $runtimeProfile = Restore-RuntimeProfile
-    $quote = { param([string]$Value) '"' + $Value.Replace('"', '\"') + '"' }
-    $arguments = @(
-        '--config', (& $quote $runtimeProfile),
-        '--pull-filter', 'ignore', (& $quote 'redirect-gateway'),
-        '--pull-filter', 'ignore', (& $quote 'dhcp-option DNS'),
-        '--route', $config.hotelSubnet, $config.hotelMask, 'vpn_gateway', '1',
-        '--writepid', (& $quote $pidPath),
-        '--log', (& $quote $logPath)
-    ) -join ' '
+    [IO.File]::WriteAllBytes($guiProfilePath, [IO.File]::ReadAllBytes($runtimeProfile))
+    $extraConfig = @"
 
-    Start-Process -FilePath $config.openVpnExe -ArgumentList $arguments -Verb RunAs -WindowStyle Hidden | Out-Null
+pull-filter ignore "redirect-gateway"
+pull-filter ignore "dhcp-option DNS"
+route $($config.hotelSubnet) $($config.hotelMask) vpn_gateway 1
+writepid "$pidPath"
+log "$logPath"
+"@
+    [IO.File]::AppendAllText($guiProfilePath, $extraConfig, [Text.UTF8Encoding]::new($false))
+    & $guiExe --command connect $guiProfileName
     $deadline = (Get-Date).AddSeconds(35)
     do {
         Start-Sleep -Milliseconds 700
@@ -147,6 +153,16 @@ function Start-HotelVpn {
 function Stop-HotelVpn {
     $process = Get-VpnProcess
     $route = Get-HotelRoute
+    if ($null -ne $process -and (Test-Path -LiteralPath $guiExe)) {
+        & $guiExe --command disconnect $guiProfileName
+        $deadline = (Get-Date).AddSeconds(12)
+        do {
+            Start-Sleep -Milliseconds 500
+            $process = Get-VpnProcess
+            if ($null -eq $process) { break }
+        } while ((Get-Date) -lt $deadline)
+        $route = Get-HotelRoute
+    }
     if ($null -ne $process -or $null -ne $route) {
         $commands = @("`$ErrorActionPreference = 'Stop'")
         if ($null -ne $process) {
@@ -165,6 +181,7 @@ function Stop-HotelVpn {
     }
     Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $runtimeProfilePath -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $guiProfilePath -Force -ErrorAction SilentlyContinue
     Write-Output 'VPN гостиницы отключён.'
 }
 
