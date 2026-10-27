@@ -127,13 +127,17 @@ function Start-HotelVpn {
     Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
     $runtimeProfile = Restore-RuntimeProfile
     [IO.File]::WriteAllBytes($guiProfilePath, [IO.File]::ReadAllBytes($runtimeProfile))
+    # OpenVPN 2.7 treats single backslashes in quoted config paths as escapes.
+    # Forward slashes are accepted on Windows and keep the generated profile valid.
+    $pidPathForOpenVpn = $pidPath -replace '\\', '/'
+    $logPathForOpenVpn = $logPath -replace '\\', '/'
     $extraConfig = @"
 
 pull-filter ignore "redirect-gateway"
 pull-filter ignore "dhcp-option DNS"
 route $($config.hotelSubnet) $($config.hotelMask) vpn_gateway 1
-writepid "$pidPath"
-log "$logPath"
+writepid "$pidPathForOpenVpn"
+log "$logPathForOpenVpn"
 "@
     [IO.File]::AppendAllText($guiProfilePath, $extraConfig, [Text.UTF8Encoding]::new($false))
     & $guiExe --command connect $guiProfileName
